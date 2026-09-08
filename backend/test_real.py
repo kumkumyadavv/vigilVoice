@@ -2,8 +2,8 @@ import librosa
 
 from ai.voice_detector import PretrainedDetector
 
+AUDIO_PATH = r"D:\sih2k26\backend\test_audio\sample_16k.wav"
 
-AUDIO_PATH =  r"C:\Apps\kumku\Documents\Sound Recordings\Recording.m4a"
 
 
 # Load audio at AASIST's required sample rate

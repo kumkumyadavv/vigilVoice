@@ -1,41 +1,52 @@
-import librosa
+import numpy as np
+import soundfile as sf
 import torch
 
-from audio.fragmenter import split_audio
 from ai.voice_detector import PretrainedDetector
 
+AUDIO_PATH = r"D:\sih2k26\backend\test_audio\clean_real_16k.wav"
+AASIST_INPUT_SAMPLES = 64600
 
-AUDIO_PATH =  r"C:\Apps\kumku\Documents\Sound Recordings\Recording.m4a"
+from pathlib import Path
 
-audio, sample_rate = librosa.load(
-    AUDIO_PATH,
-    sr=16000,
-    mono=True,
-)
+print("TESTING FILE:", Path(AUDIO_PATH).resolve())
 
-chunks = split_audio(audio, sample_rate)
+
+# Load exactly like official AASIST
+audio, sample_rate = sf.read(AUDIO_PATH)
+
+print("Sample rate:", sample_rate)
+print("Shape:", audio.shape)
+print("Samples:", len(audio))
+
+
+# Official AASIST padding behavior
+if len(audio) >= AASIST_INPUT_SAMPLES:
+    audio = audio[:AASIST_INPUT_SAMPLES]
+else:
+    num_repeats = int(AASIST_INPUT_SAMPLES / len(audio)) + 1
+    audio = np.tile(audio, num_repeats)[:AASIST_INPUT_SAMPLES]
+
+
+waveform = torch.from_numpy(
+    audio
+).float().unsqueeze(0)
+
 
 detector = PretrainedDetector()
 
-print("\n--- RAW AASIST OUTPUT ---")
+with torch.no_grad():
+    _, logits = detector.model(waveform)
 
-for i, chunk in enumerate(chunks, start=1):
+probabilities = torch.softmax(logits, dim=1)
 
-    waveform = torch.from_numpy(
-        chunk["audio"]
-    ).float().unsqueeze(0)
+print("\n--- OFFICIAL-STYLE AASIST TEST ---")
 
-    with torch.no_grad():
-        _, logits = detector.model(waveform)
+print("logit0:", logits[0, 0].item())
+print("logit1:", logits[0, 1].item())
 
-    probabilities = torch.softmax(logits, dim=1)
+print("prob0:", probabilities[0, 0].item())
+print("prob1:", probabilities[0, 1].item())
 
-    print(
-        f"Chunk {i}: "
-        f"{chunk['start']:.2f}s - "
-        f"{chunk['end']:.2f}s | "
-        f"logit0={logits[0, 0].item():.4f} | "
-        f"logit1={logits[0, 1].item():.4f} | "
-        f"prob0={probabilities[0, 0].item():.4f} | "
-        f"prob1={probabilities[0, 1].item():.4f}"
-    )
+print("\nOfficial AASIST score (class 1):",
+      logits[0, 1].item())
