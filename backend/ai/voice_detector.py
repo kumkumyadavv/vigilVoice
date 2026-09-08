@@ -17,15 +17,14 @@ if not AASIST_ROOT.exists():
         f"AASIST repository not found at: {AASIST_ROOT}"
     )
 
-# Add AASIST repo to Python import path
 sys.path.insert(0, str(AASIST_ROOT))
-
 
 from models.AASIST import Model
 
 
 # AASIST expects exactly 64,600 samples
 AASIST_INPUT_SAMPLES = 64_600
+AASIST_SAMPLE_RATE = 16_000
 
 
 class VoiceDetector:
@@ -53,9 +52,9 @@ class PretrainedDetector(VoiceDetector):
     """
 
     def __init__(self):
+
         self.device = torch.device("cpu")
 
-        # Same architecture configuration as official AASIST.conf
         model_config = {
             "architecture": "AASIST",
             "nb_samp": 64600,
@@ -96,14 +95,14 @@ class PretrainedDetector(VoiceDetector):
 
     @staticmethod
     def _prepare_audio(
-        audio_chunk: np.ndarray,
-        sample_rate: int,
-    ) -> np.ndarray:
+        audio_chunk,
+        sample_rate,
+    ):
 
         if audio_chunk is None or len(audio_chunk) == 0:
             raise ValueError("Audio chunk is empty.")
 
-        if sample_rate != 16_000:
+        if sample_rate != AASIST_SAMPLE_RATE:
             raise ValueError(
                 f"AASIST expects 16 kHz audio, got {sample_rate} Hz."
             )
@@ -111,25 +110,28 @@ class PretrainedDetector(VoiceDetector):
         audio = np.asarray(
             audio_chunk,
             dtype=np.float32,
-        )
+        ).reshape(-1)
 
-        # Flatten in case shape is (N, 1)
-        audio = audio.reshape(-1)
+        # AASIST requires exactly 64,600 samples.
+        #
+        # IMPORTANT:
+        # Do NOT repeat audio.
+        #
+        # If the final chunk is shorter, zero-pad it.
+        if len(audio) < AASIST_INPUT_SAMPLES:
 
-        # AASIST expects exactly 64,600 samples.
-        if len(audio) >= AASIST_INPUT_SAMPLES:
-            audio = audio[:AASIST_INPUT_SAMPLES]
+            audio = np.pad(
+                audio,
+                (
+                    0,
+                    AASIST_INPUT_SAMPLES - len(audio),
+                ),
+                mode="constant",
+            )
 
         else:
-            # Repeat audio instead of zero-padding.
-            repeats = (
-                AASIST_INPUT_SAMPLES // len(audio)
-            ) + 1
 
-            audio = np.tile(
-                audio,
-                repeats,
-            )[:AASIST_INPUT_SAMPLES]
+            audio = audio[:AASIST_INPUT_SAMPLES]
 
         return audio.astype(np.float32)
 
@@ -159,12 +161,9 @@ class PretrainedDetector(VoiceDetector):
             dim=1,
         )
 
-        # AASIST class convention:
+        # AASIST convention:
         # index 0 = spoof
         # index 1 = bona fide
-        #
-        # Therefore:
-        # synthetic probability = P(spoof)
         synthetic_probability = probabilities[
             0, 0
         ].item()
