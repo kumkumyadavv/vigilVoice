@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
+from huggingface_hub import hf_hub_download
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 from aasist_model.AASIST import Model
@@ -40,10 +41,9 @@ class PretrainedDetector(VoiceDetector):
 
         self.model = Model(model_config).to(self.device)
 
-        checkpoint_path = (
-    PROJECT_ROOT
-    / "model_weights"
-    / "AASIST.pth"
+        checkpoint_path = hf_hub_download(
+    repo_id="kumkumyadav/vigilvoice-aasist",
+    filename="AASIST.pth",
 )
 
         if not checkpoint_path.exists():
