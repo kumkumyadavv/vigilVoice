@@ -32,7 +32,12 @@ def convert_to_wav(input_path: str) -> str:
             f"Audio file not found: {input_path}"
         )
 
-    output_file = input_file.with_suffix(".wav")
+    if input_file.suffix.lower() == ".wav":
+        output_file = input_file.with_name(
+        input_file.stem + "_converted.wav"
+    )
+    else:
+        output_file = input_file.with_suffix(".wav")
 
     command = [
         "ffmpeg",

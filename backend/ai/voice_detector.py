@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import torch
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 AASIST_ROOT = PROJECT_ROOT / "aasist"
 
@@ -23,19 +22,13 @@ AASIST_SAMPLE_RATE = 16_000
 
 
 class VoiceDetector:
-
-    def predict(
-        self,
-        audio_chunk: np.ndarray,
-        sample_rate: int,
-    ) -> float:
+    def predict(self, audio_chunk: np.ndarray, sample_rate: int) -> float:
         raise NotImplementedError
 
 
 class PretrainedDetector(VoiceDetector):
 
     def __init__(self):
-
         self.device = torch.device("cpu")
 
         model_config = {
@@ -65,7 +58,7 @@ class PretrainedDetector(VoiceDetector):
 
         if not checkpoint_path.exists():
             raise FileNotFoundError(
-                f"Checkpoint not found: {checkpoint_path}"
+                f"AASIST checkpoint not found: {checkpoint_path}"
             )
 
         state_dict = torch.load(
@@ -74,15 +67,10 @@ class PretrainedDetector(VoiceDetector):
         )
 
         self.model.load_state_dict(state_dict)
-
-        # IMPORTANT
         self.model.eval()
 
     @staticmethod
-    def _prepare_audio(
-        audio_chunk: np.ndarray,
-        sample_rate: int,
-    ):
+    def _prepare_audio(audio_chunk, sample_rate):
 
         if audio_chunk is None or len(audio_chunk) == 0:
             raise ValueError("Audio chunk is empty.")
@@ -94,39 +82,52 @@ class PretrainedDetector(VoiceDetector):
 
         audio = np.asarray(
             audio_chunk,
-            dtype=np.float32,
+            dtype=np.float32
         ).reshape(-1)
 
-        # Official AASIST-style padding/repetition
         if len(audio) < AASIST_INPUT_SAMPLES:
-
             num_repeats = (
                 AASIST_INPUT_SAMPLES // len(audio)
             ) + 1
 
             audio = np.tile(
                 audio,
-                num_repeats,
+                num_repeats
             )
 
         audio = audio[:AASIST_INPUT_SAMPLES]
 
-        return audio.astype(np.float32)
+        return audio
 
-@torch.no_grad()
-def predict(self, audio_chunk: np.ndarray, sample_rate: int) -> float:
-    audio = self._prepare_audio(audio_chunk, sample_rate)
+    @torch.no_grad()
+    def predict(
+        self,
+        audio_chunk: np.ndarray,
+        sample_rate: int
+    ) -> float:
 
-    waveform = torch.from_numpy(audio)
-    waveform = waveform.unsqueeze(0).to(self.device)
+        audio = self._prepare_audio(
+            audio_chunk,
+            sample_rate
+        )
 
-    _, logits = self.model(waveform)
+        waveform = torch.from_numpy(audio)
 
-    probabilities = torch.softmax(logits, dim=1)
+        waveform = waveform.unsqueeze(0)
 
-    # AASIST official label mapping:
-    # class 0 = spoof / fake
-    # class 1 = bona fide / real
-    spoof_probability = probabilities[0, 0].item()
+        waveform = waveform.to(self.device)
 
-    return float(spoof_probability)
+        _, logits = self.model(waveform)
+
+        probabilities = torch.softmax(
+            logits,
+            dim=1
+        )
+
+        # AASIST label mapping:
+        # class 0 = SPOOF / FAKE
+        # class 1 = BONAFIDE / REAL
+
+        spoof_probability = probabilities[0, 0].item()
+
+        return float(spoof_probability)
