@@ -3,7 +3,7 @@ import json
 
 from sqlalchemy.orm import Session
 
-from models import AuditLog
+from database.models import AuditLog
 
 
 def create_audit_hash(
