@@ -41,9 +41,11 @@ class PretrainedDetector(VoiceDetector):
 
         self.model = Model(model_config).to(self.device)
 
-        checkpoint_path = hf_hub_download(
-    repo_id="kumkumyadav/vigilvoice-aasist",
-    filename="AASIST.pth",
+        checkpoint_path = ath(
+    hf_hub_download(
+        repo_id="kumkumyadav/vigilvoice-aasist",
+        filename="AASIST.pth",
+    )
 )
 
         if not checkpoint_path.exists():
