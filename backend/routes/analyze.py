@@ -323,3 +323,28 @@ async def analyze(
 
             if os.path.exists(wav_path):
                 os.remove(wav_path)
+
+
+
+
+#GET AUDIT LOGS
+@router.get("/audit-log")
+def get_audit_logs(db: Session = Depends(get_db)):
+
+    logs = (
+        db.query(AuditLog)
+        .order_by(AuditLog.id.desc())
+        .all()
+    )
+
+    return [
+        {
+            "id": log.id,
+            "analysis_id": log.analysis_id,
+            "event_type": log.event_type,
+            "data_hash": log.data_hash,
+            "previous_hash": log.previous_hash,
+            "created_at": log.created_at,
+        }
+        for log in logs
+    ]
