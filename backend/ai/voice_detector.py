@@ -3,18 +3,9 @@ from pathlib import Path
 
 import numpy as np
 import torch
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-AASIST_ROOT = PROJECT_ROOT / "aasist"
-
-if not AASIST_ROOT.exists():
-    raise FileNotFoundError(
-        f"AASIST repository not found at: {AASIST_ROOT}"
-    )
-
-sys.path.insert(0, str(AASIST_ROOT))
-
-from models.AASIST import Model
+from aasist_model.AASIST import Model
 
 
 AASIST_INPUT_SAMPLES = 64_600
@@ -50,11 +41,10 @@ class PretrainedDetector(VoiceDetector):
         self.model = Model(model_config).to(self.device)
 
         checkpoint_path = (
-            AASIST_ROOT
-            / "models"
-            / "weights"
-            / "AASIST.pth"
-        )
+    PROJECT_ROOT
+    / "model_weights"
+    / "AASIST.pth"
+)
 
         if not checkpoint_path.exists():
             raise FileNotFoundError(

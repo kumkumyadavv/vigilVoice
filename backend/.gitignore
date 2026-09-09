@@ -123,5 +123,7 @@ docker-compose.override.yml
 
 # AASIST pretrained model repo
 ../aasist/
-
+model_weights/
+*.pth
+.env
 alembic/
