@@ -41,7 +41,7 @@ class PretrainedDetector(VoiceDetector):
 
         self.model = Model(model_config).to(self.device)
 
-        checkpoint_path = ath(
+        checkpoint_path = Path(
     hf_hub_download(
         repo_id="kumkumyadav/vigilvoice-aasist",
         filename="AASIST.pth",
