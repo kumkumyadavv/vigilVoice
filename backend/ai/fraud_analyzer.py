@@ -184,16 +184,22 @@ class FraudAnalyzer:
         # and normal conversation.
         fraud_margin = best_similarity - normal_similarity
 
-        # Convert semantic signal to 0-100 score.
-        nlp_score = np.clip(
-            (fraud_margin + 0.10) * 250,
-            0,
-            100
-        )
-
-        # Normal conversation should not create fraud risk.
-        if nlp_intent == "NORMAL_CONVERSATION":
+        # Semantic model can always pick an intent,
+        # so require a meaningful margin before treating
+        # the text as suspicious.
+        if (
+            nlp_intent == "NORMAL_CONVERSATION"
+            or fraud_margin < 0.08
+        ):
             nlp_score = 0.0
+            nlp_intent = "NORMAL_CONVERSATION"
+
+        else:
+            nlp_score = np.clip(
+                (fraud_margin - 0.08) * 250,
+                0,
+                100
+            )
 
         # -------------------------
         # COMBINE RULES + NLP
@@ -220,8 +226,8 @@ class FraudAnalyzer:
         )
 
         return {
-            "fraud_probability": fraud_probability,
-            "fraud_risk": fraud_risk,
+            "fraud_probability": float(fraud_probability),
+            "fraud_risk": float(fraud_risk),
             "fraud_type": fraud_type,
             "indicators": indicators,
             "nlp_intent": nlp_intent,

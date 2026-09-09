@@ -8,7 +8,7 @@ from security.audit import save_audit_log
 from sqlalchemy.orm import Session
 
 from database.db import get_db
-from database.models import CallAnalysis, SuspiciousSegment
+from database.models import CallAnalysis, SuspiciousSegment,AuditLog
 
 from audio.processor import preprocess_audio
 from ai.voice_detector import PretrainedDetector
@@ -38,7 +38,7 @@ segment_detector = SegmentDetector(
 # --------------------------------------------------
 # Analyze endpoint
 # --------------------------------------------------
-
+@router.post("/analyze-call")
 @router.post("/analyze")
 async def analyze(
     file: UploadFile = File(...),
@@ -235,11 +235,11 @@ async def analyze(
             "suspicious_segments": suspicious_segments
         }
 
-        save_audit_log(
-            db,
-            analysis.id,
-            audit_data
-        )
+        audit_log = save_audit_log(
+    db,
+    analysis.id,
+    audit_data
+)
 
         # --------------------------------------------------
         # 12. Final response
@@ -276,7 +276,9 @@ async def analyze(
 
             "transcription": transcription,
 
-            "suspicious_segments": suspicious_segments
+            "suspicious_segments": suspicious_segments,
+
+            "audit_hash": audit_log.data_hash
         }
 
     # --------------------------------------------------
