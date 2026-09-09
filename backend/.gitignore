@@ -1,0 +1,129 @@
+# =========================
+# Python / FastAPI
+# =========================
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+.venv/
+venv/
+env/
+ENV/
+
+*.egg-info/
+dist/
+build/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# =========================
+# Environment / Secrets
+# =========================
+
+.env
+.env.*
+!.env.example
+
+# =========================
+# FastAPI / Uvicorn
+# =========================
+
+*.log
+
+# =========================
+# AI / ML
+# =========================
+
+models/
+checkpoints/
+weights/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.bin
+
+# Generated audio / datasets
+uploads/
+temp/
+tmp/
+datasets/
+
+# =========================
+# PostgreSQL / Database
+# =========================
+
+*.sql
+*.sqlite
+*.sqlite3
+
+# =========================
+# Node / React / Vite
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+dist/
+.vite/
+
+# =========================
+# React Environment
+# =========================
+
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =========================
+# IDE / Editors
+# =========================
+
+.vscode/
+.idea/
+
+*.swp
+*.swo
+
+# =========================
+# OS
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+# Coverage
+# =========================
+
+.coverage
+htmlcov/
+*.cover
+.coverage.*
+
+# =========================
+# Docker
+# =========================
+
+docker-compose.override.yml
+
+# =========================
+# Misc
+# =========================
+
+*.log
+*.tmp
+
+# AASIST pretrained model repo
+../aasist/
+model_weights/
+*.pth
+.env
+alembic/
